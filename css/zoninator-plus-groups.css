@@ -1,0 +1,37 @@
+#zone-groups {
+	margin-top: 10px;
+}
+
+#zone-groups td {
+	padding: 10px 5px !important;
+}
+
+.widefat td.zone-groups-message {
+	text-align: center;
+}
+
+#zone-groups input[type="text"] {
+	width: 98%;
+}
+
+.zone-group-controls {
+	float: left;
+}
+
+.zone-add-remove {
+	padding: 0px 5px;
+}
+
+.zone-add-remove button {
+	display: block;
+	width: 70px;
+}
+
+.zones-selected-order {
+	text-align: center;
+}
+
+.zone-group-filter {
+	font-size: 14px;
+	padding: 10px 0px;
+}

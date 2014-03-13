@@ -1,0 +1,18 @@
+#zone-edit-wrapper .form-field #zone-max-posts {
+	width: 30px;
+}
+
+#zone-edit-wrapper .chzn-container {
+	width: 98% !important;
+}
+
+#zone-edit-wrapper .chzn-container input {
+	width: 100% !important;
+}
+
+.zone-post-col.zone-post-backfill {
+	width: 20%;
+	font-style: italic;
+	font-weight: normal;
+	color: rgb(51, 153, 153);
+}
