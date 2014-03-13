@@ -15,7 +15,7 @@
  */
 function zp_is_zone_visible( $zone ) {
 	$zone = z_get_zone( $zone );
-	$visible = is_object( $zone ) ? tm_get_term_meta( $zone->term_id, '_zoninator_zone_visible', true ) : false;
+	$visible = is_object( $zone ) ? fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, '_zoninator_zone_visible', true ) : false;
 	return 1 == $visible;
 }
 
@@ -32,7 +32,7 @@ function zp_is_zone_visible( $zone ) {
  */
 function zp_get_posts_in_zone( $zone, $limit = null, $options = array() ) {
 	global $zoninator_plus;
-	
+
 	$options = wp_parse_args( $options, array(
 		'ignore_current' => true
 	) );
@@ -43,7 +43,7 @@ function zp_get_posts_in_zone( $zone, $limit = null, $options = array() ) {
 		$args['posts_per_page'] = $limit;
 	} else {
 		$zone = z_get_zone( $zone );
-		$args['posts_per_page'] = tm_get_term_meta( $zone->term_id, $zoninator_plus->max_posts_meta_key, true ); //Number of posts returned for this zone
+		$args['posts_per_page'] = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $zoninator_plus->max_posts_meta_key, true ); //Number of posts returned for this zone
 	}
 	# By default, we probably don't want to include the current post
 	if ( $options['ignore_current'] && is_single() && isset( $GLOBALS['post'] ) )

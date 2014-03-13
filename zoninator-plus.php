@@ -138,13 +138,13 @@ class Zoninator_Plus {
         $zoninator_dependency = new Plugin_Dependency( 'Zoninator Plus', 'Zone Manager (Zoninator)', 'http://wordpress.org/extend/plugins/zoninator/' );
         if( !$zoninator_dependency->verify() ) {
             // Cease activation
-            die( $zoninator_dependency->message() );
+            wp_die( $zoninator_dependency->message() );
         }
 
-        $term_meta_dependency = new Plugin_Dependency( 'Zoninator Plus', 'Term Meta', 'https://github.com/bcampeau/term-meta' );
+        $term_meta_dependency = new Plugin_Dependency( 'Zoninator Plus', 'Fieldmanager', 'https://github.com/alleyinteractive/wordpress-fieldmanager' );
         if( !$term_meta_dependency->verify() ) {
             // Cease activation
-            die( $term_meta_dependency->message() );
+            wp_die( $term_meta_dependency->message() );
         }
     }
 
@@ -176,7 +176,7 @@ class Zoninator_Plus {
         <div class="form-field zone-field">
             <label for="zone-visible"><?php _e( 'Visible?', 'zoninator-plus' ); ?></label>
             <?php
-            $visible = tm_get_term_meta( $zone->term_id, $this->visible_meta_key, true );
+            $visible = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->visible_meta_key, true );
             echo sprintf(
                 '<input type="checkbox" id="zone-visible" name="%s" value="1" %s/>',
                 $this->visible_meta_key,
@@ -187,7 +187,7 @@ class Zoninator_Plus {
         </div>
         <div class="form-field zone-field">
             <label for="zone-max-posts"><?php _e( 'Maximum Pieces of Content', 'zoninator-plus' ); ?></label>
-            <input type="text" id="zone-max-posts" name="<?php echo $this->max_posts_meta_key ?>" value="<?php echo esc_attr( tm_get_term_meta( $zone->term_id, $this->max_posts_meta_key, true ) ); ?>" />
+            <input type="text" id="zone-max-posts" name="<?php echo $this->max_posts_meta_key ?>" value="<?php echo esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->max_posts_meta_key, true ) ); ?>" />
             <br><i><?php _e( 'Maximum number of content items for this zone. Leave blank for unlimited.', 'zoninator-plus' ); ?></i>
         </div>
         <div class="form-field zone-field">
@@ -195,7 +195,7 @@ class Zoninator_Plus {
             <select id="zone-backfill" name="<?php echo $this->backfill_meta_key ?>">
             <?php
             // Get the current value
-            $backfill = esc_attr( tm_get_term_meta( $zone->term_id, $this->backfill_meta_key, true ) );
+            $backfill = esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->backfill_meta_key, true ) );
 
             // Iterate through the options
             foreach( $this->backfill_options as $option ) {
@@ -215,7 +215,7 @@ class Zoninator_Plus {
             <select class="chzn-select" id="zone-allowed-content-types-display" name="<?php echo $this->post_types_meta_key ?>_display[]" multiple="multiple" data-placeholder="Select Post Types">
             <?php
             // Get currently selected post types
-            $selected_post_types = tm_get_term_meta( $zone->term_id, $this->post_types_meta_key, true );
+            $selected_post_types = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->post_types_meta_key, true );
             $selected_post_types_data = json_decode( $selected_post_types );
             $selected_post_types_names = array();
             if( is_array( $selected_post_types_data ) )
@@ -245,7 +245,7 @@ class Zoninator_Plus {
             } );
             ?>
             </select>
-            <input type="hidden" id="zone-allowed-content-types" name="<?php echo $this->post_types_meta_key ?>" value="<?php echo esc_attr( tm_get_term_meta( $zone->term_id, $this->post_types_meta_key, true ) ); ?>" />
+            <input type="hidden" id="zone-allowed-content-types" name="<?php echo $this->post_types_meta_key ?>" value="<?php echo esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->post_types_meta_key, true ) ); ?>" />
             <br><i><?php _e( 'Choose which post types to use for backfill. Leave blank to use all.', 'zoninator-plus' ); ?></i>
         </div>
         <div class="form-field zone-field">
@@ -253,7 +253,7 @@ class Zoninator_Plus {
             <select class="chzn-select" id="zone-content-terms-display" name="<?php echo $this->terms_meta_key ?>_display[]" multiple="multiple" data-placeholder="Select Terms">
             <?php
             // Get currently selected post types
-            $selected_terms = tm_get_term_meta( $zone->term_id, $this->terms_meta_key, true );
+            $selected_terms = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->terms_meta_key, true );
             $selected_terms_data = json_decode( $selected_terms );
             $selected_terms_ids = array();
             if( is_array( $selected_terms_data ) )
@@ -300,7 +300,7 @@ class Zoninator_Plus {
             } );
             ?>
             </select>
-            <input type="hidden" id="zone-content-terms" name="<?php echo $this->terms_meta_key ?>" value="<?php echo esc_attr( tm_get_term_meta( $zone->term_id, $this->terms_meta_key, true ) ); ?>" />
+            <input type="hidden" id="zone-content-terms" name="<?php echo $this->terms_meta_key ?>" value="<?php echo esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->terms_meta_key, true ) ); ?>" />
             <br><i><?php _e( 'Choose which terms to use for backfill. Leave blank to use all.', 'zoninator-plus' ); ?></i>
         </div>
         <?php
@@ -320,21 +320,21 @@ class Zoninator_Plus {
             <label for="zone-visible"><?php _e( 'Visible?', 'zoninator-plus' ); ?></label>
             <span>
             <?php
-            $visible = tm_get_term_meta( $zone->term_id, $this->visible_meta_key, true );
+            $visible = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->visible_meta_key, true );
             echo ( $visible == 1 ) ? "Yes" : "No";
             ?>
             </span>
         </div>
         <div class="form-field zone-field">
             <label for="zone-max-content"><?php _e( 'Maximum Pieces of Content', 'zoninator-plus' ); ?></label>
-            <span><?php echo esc_attr( tm_get_term_meta( $zone->term_id, $this->max_posts_meta_key, true ) ); ?></span>
+            <span><?php echo esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->max_posts_meta_key, true ) ); ?></span>
         </div>
         <div class="form-field zone-field">
             <label for="zone-backfill"><?php _e( 'Automatically Backfill Using', 'zoninator-plus' ); ?></label>
             <span>
             <?php
             // Get the current value
-            $backfill = esc_attr( tm_get_term_meta( $zone->term_id, $this->backfill_meta_key, true ) );
+            $backfill = esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->backfill_meta_key, true ) );
             $backfill_label = $this->backfill_options[0]['label'];
             // Iterate through the options
             foreach( $this->backfill_options as $option ) {
@@ -352,7 +352,7 @@ class Zoninator_Plus {
             <span>
             <?php
             // Get currently selected post types
-            $selected_post_types = tm_get_term_meta( $zone->term_id, $this->post_types_meta_key, true );
+            $selected_post_types = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->post_types_meta_key, true );
             $selected_post_types_data = json_decode( $selected_post_types );
             $selected_post_types_labels = array();
             foreach( $selected_post_types_data as $selected_post_type ) $selected_post_types_labels[] = $selected_post_type->label;
@@ -365,7 +365,7 @@ class Zoninator_Plus {
             <span>
             <?php
             // Get currently selected post types
-            $selected_terms = tm_get_term_meta( $zone->term_id, $this->terms_meta_key, true );
+            $selected_terms = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->terms_meta_key, true );
             $selected_terms_data = json_decode( $selected_terms );
             $selected_terms_labels = array();
             if( !empty( $selected_terms_data ) )
@@ -383,9 +383,9 @@ class Zoninator_Plus {
 
     /**
      * Modifies display of zone post columns in the admin interface based
-     * @params array $args
-     * @params object $post
-     * @params object $zone
+     * @param array $args
+     * @param object $post
+     * @param object $zone
      * @return array
      */
     public function zone_post_columns( $args, $post, $zone ) {
@@ -400,8 +400,8 @@ class Zoninator_Plus {
 
     /**
      * Zoninator Plus display function for zone post info
-     * @params object $post
-     * @params object $zone
+     * @param object $post
+     * @param object $zone
      * @return void
      */
     function admin_page_zone_post_col_info( $post, $zone ) {
@@ -413,7 +413,7 @@ class Zoninator_Plus {
         // Hide row actions for backfilled posts
         $backfill_meta_key = $this->backfill_meta_prefix . $zone->term_id;
         $backfill = get_post_meta( $post->ID, $backfill_meta_key, true );
-        $zone_backfill = tm_get_term_meta( $zone->term_id, $this->backfill_meta_key, true );
+        $zone_backfill = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->backfill_meta_key, true );
         if( $backfill != 1 || $zone_backfill == 'none' ) {
         	// Display the remove link for all non-backfilled content or for all content if the zone does not have backfill enabled
             $action_links[] = sprintf( '<a href="#" class="delete" title="%s">%s</a>', __( 'Remove this item from the zone', 'zoninator' ), __( 'Remove', 'zoninator' ) );
@@ -439,8 +439,8 @@ class Zoninator_Plus {
 
     /**
      * Zoninator Plus display function for backfill indicator
-     * @params object $post
-     * @params object $zone
+     * @param object $post
+     * @param object $zone
      * @return void
      */
     function admin_page_zone_post_col_backfill( $post, $zone ) {
@@ -464,24 +464,24 @@ class Zoninator_Plus {
     /**
      * Saves extended zone admin fields when the zone term is created or updated
      *
-     * @params int $term_id
-     * @params int $tt_id
-     * @params string $taxonomy
+     * @param int $term_id
+     * @param int $tt_id
+     * @param string $taxonomy
      * @return void
      */
     function save_zone_fields( $term_id, $tt_id, $taxonomy ) {
         // If the custom term fields are present and this is the correct taxonomy, save them
-        if( $taxonomy == "zoninator_zones" ) {
-            tm_update_term_meta( $term_id, $this->visible_meta_key, ( ( array_key_exists( $this->visible_meta_key, $_POST ) ) ? $_POST[$this->visible_meta_key] : "0" ) );
-            tm_update_term_meta( $term_id, $this->max_posts_meta_key, ( ( array_key_exists( $this->max_posts_meta_key, $_POST ) ) ? $_POST[$this->max_posts_meta_key] : "" ) );
-            tm_update_term_meta( $term_id, $this->backfill_meta_key, ( ( array_key_exists( $this->backfill_meta_key, $_POST ) ) ? $_POST[$this->backfill_meta_key] : "none" ) );
-            tm_update_term_meta( $term_id, $this->post_types_meta_key, ( ( array_key_exists( $this->post_types_meta_key, $_POST ) ) ? $_POST[$this->post_types_meta_key] : "" ) );
-            tm_update_term_meta( $term_id, $this->terms_meta_key, ( ( array_key_exists( $this->terms_meta_key, $_POST ) ) ? $_POST[$this->terms_meta_key] : "" ) );
+        if( $taxonomy == z_get_zoninator()->zone_taxonomy ) {
+            fm_update_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->visible_meta_key, ( ( array_key_exists( $this->visible_meta_key, $_POST ) ) ? $_POST[ $this->visible_meta_key ] : "0" ) );
+            fm_update_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->max_posts_meta_key, ( ( array_key_exists( $this->max_posts_meta_key, $_POST ) ) ? $_POST[ $this->max_posts_meta_key ] : "" ) );
+            fm_update_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->backfill_meta_key, ( ( array_key_exists( $this->backfill_meta_key, $_POST ) ) ? $_POST[ $this->backfill_meta_key ] : "none" ) );
+            fm_update_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->post_types_meta_key, ( ( array_key_exists( $this->post_types_meta_key, $_POST ) ) ? $_POST[ $this->post_types_meta_key ] : "" ) );
+            fm_update_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->terms_meta_key, ( ( array_key_exists( $this->terms_meta_key, $_POST ) ) ? $_POST[ $this->terms_meta_key ] : "" ) );
 
 			// Run backfill for the zone
 			global $zp_groups;
 			$zone_id = $term_id;
-			$zone_group_id = tm_get_term_meta( $zone_id, $zp_groups->zone_group_meta_key, true );
+			$zone_group_id = fm_get_term_meta( $zone_id, z_get_zoninator()->zone_taxonomy, $zp_groups->zone_group_meta_key, true );
 
 			if( !empty( $zone_id ) && empty( $zone_group_id ) ) {
 				// Do backfill for a single zone
@@ -496,19 +496,19 @@ class Zoninator_Plus {
     /**
      * Removes extended zone admin fields when the zone term is deleted
      *
-     * @params int $term_id
-     * @params int $tt_id
-     * @params string $taxonomy
+     * @param int $term_id
+     * @param int $tt_id
+     * @param string $taxonomy
      * @return void
      */
     function delete_zone_fields( $term_id, $tt_id, $taxonomy ) {
         // If this is a Zoninator term, remove all of the Zoninator Plus extended metadata
-        if( $taxonomy == "zoninator_zones" ) {
-            tm_delete_term_meta( $term_id, $this->visible_meta_key );
-            tm_delete_term_meta( $term_id, $this->max_posts_meta_key );
-            tm_delete_term_meta( $term_id, $this->backfill_meta_key );
-            tm_delete_term_meta( $term_id, $this->post_types_meta_key );
-            tm_delete_term_meta( $term_id, $this->terms_meta_key );
+        if ( $taxonomy == z_get_zoninator()->zone_taxonomy ) {
+            fm_delete_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->visible_meta_key );
+            fm_delete_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->max_posts_meta_key );
+            fm_delete_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->backfill_meta_key );
+            fm_delete_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->post_types_meta_key );
+            fm_delete_term_meta( $term_id, z_get_zoninator()->zone_taxonomy, $this->terms_meta_key );
         }
     }
 
@@ -628,14 +628,14 @@ class Zoninator_Plus {
      *
      * @return string
      */
-    function do_zone_backfill( $zone="", &$zone_group_posts=array(), $mode="browser" ) {
+    function do_zone_backfill( $zone = "", &$zone_group_posts = array(), $mode = "browser" ) {
         $zoninator = z_get_zoninator();
         $message = "";
         $line_break = ( $mode == "browser" ) ? "<br>\r\n" : "\r\n";
 
         // Determine if the zone has backfill enabled
-        $backfill = tm_get_term_meta( $zone, $this->backfill_meta_key, true );
-        $max_content = tm_get_term_meta( $zone, $this->max_posts_meta_key, true );
+        $backfill = fm_get_term_meta( $zone, z_get_zoninator()->zone_taxonomy, $this->backfill_meta_key, true );
+        $max_content = fm_get_term_meta( $zone, z_get_zoninator()->zone_taxonomy, $this->max_posts_meta_key, true );
 
         if( !empty( $backfill ) && $backfill != 'none' ) {
             $message .= sprintf(
@@ -807,16 +807,16 @@ class Zoninator_Plus {
     /**
      * Create the backfill query
      *
-     * @params string $backfill
-     * @params int $zone
-     * @params array $exclude_posts
+     * @param string $backfill
+     * @param int $zone
+     * @param array $exclude_posts
      * @return object WP_Query
      */
     function get_backfill_query( $backfill, $zone, $exclude_posts = array(), $max_content = 10 ) {
 
         // Get the backfill criteria
-        $content_types = json_decode( tm_get_term_meta( $zone, $this->post_types_meta_key, true ) );
-        $terms = json_decode( tm_get_term_meta( $zone, $this->terms_meta_key, true ) );
+        $content_types = json_decode( fm_get_term_meta( $zone, z_get_zoninator()->zone_taxonomy, $this->post_types_meta_key, true ) );
+        $terms = json_decode( fm_get_term_meta( $zone, z_get_zoninator()->zone_taxonomy, $this->terms_meta_key, true ) );
 
         // Required criteria
         $args = array(
@@ -859,8 +859,8 @@ class Zoninator_Plus {
     /**
      * Check if a post is backfilled
      *
-     * @params int $zone
-     * @params object $post
+     * @param int $zone
+     * @param object $post
      * @return bool
      */
     function post_is_backfilled( $zone, $post ) {
@@ -873,8 +873,8 @@ class Zoninator_Plus {
     /**
      * Check if a post should be replaced by the latest post in a set of backfill data
      *
-     * @params object $post
-     * @params array $backfill_posts
+     * @param object $post
+     * @param array $backfill_posts
      * @return bool
      */
     function post_expired( $current_post, $new_post ) {
@@ -890,9 +890,9 @@ class Zoninator_Plus {
     /**
      * Replace a backfilled post with new content
      *
-     * @params int $zone
-     * @params object $current_post
-     * @params object $new_post
+     * @param int $zone
+     * @param object $current_post
+     * @param object $new_post
      * @return void
      */
     function replace_post( $zone, $current_post, $new_post ) {
@@ -913,9 +913,9 @@ class Zoninator_Plus {
     /**
      * Append a backfilled post to the current zone
      *
-     * @params int $zone
-     * @params object $post
-     * @params int $posts_filled
+     * @param int $zone
+     * @param object $post
+     * @param int $posts_filled
      * @return void
      */
     function append_post( $zone, $post, $posts_filled ) {
@@ -930,8 +930,8 @@ class Zoninator_Plus {
     /**
      * Remove a backfilled post from a zone
      *
-     * @params int $zone
-     * @params object $post
+     * @param int $zone
+     * @param object $post
      * @return void
      */
     function remove_post( $zone, $post ) {
@@ -974,7 +974,7 @@ class Zoninator_Plus {
     /**
      * Get the zone order meta key
      *
-     * @params int $zone
+     * @param int $zone
      * @return string
      */
     function get_order_meta_key( $zone ) {
@@ -985,7 +985,7 @@ class Zoninator_Plus {
     /**
      * Get the zone backfill meta key
      *
-     * @params int $zone
+     * @param int $zone
      * @return string
      */
     function get_backfill_meta_key( $zone ) {
@@ -1032,7 +1032,7 @@ class Zoninator_Plus {
      * Verify Zoninator nonce and access using it's own methods for the zone edit form.
      * It is not possible to attach our own nonce to all Zoninator actions, so it's better to use its method.
      *
-     * @params int $term_id
+     * @param int $term_id
      * @return void
      */
     private function _zoninator_verify( $term_id ) {
@@ -1045,7 +1045,7 @@ class Zoninator_Plus {
     /**
      * Get the Zoninator order meta key value
      *
-     * @params int $term_id
+     * @param int $term_id
      * @return void
      */
     private function _zoninator_order_meta_key( $zone_id ) {
@@ -1056,7 +1056,7 @@ class Zoninator_Plus {
     /**
      * Handle unauthorized access
      *
-     * @params int $term_id
+     * @param int $term_id
      * @return void
      */
     private function _unauthorized_access() {
