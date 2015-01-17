@@ -105,7 +105,7 @@ class Zoninator_Plus {
 		add_action( 'init', array( $this, 'init' ) );
 
 		// Zoninator hooks
-		add_action( 'zoninator_pre_zone_fields', array( $this, 'zone_fields' ) );
+		add_action( 'zoninator_post_zone_fields', array( $this, 'zone_fields' ) );
 		add_action( 'zoninator_pre_zone_readonly', array( $this, 'zone_readonly' ) );
 		add_action( 'edited_term', array( $this, 'save_zone_fields'), 15, 3 );
 		add_action( 'created_term', array( $this, 'save_zone_fields'), 15, 3 );
