@@ -105,7 +105,7 @@ class Zoninator_Plus {
 		add_action( 'init', array( $this, 'init' ) );
 
 		// Zoninator hooks
-		add_action( 'zoninator_pre_zone_fields', array( $this, 'zone_fields' ) );
+		add_action( 'zoninator_post_zone_fields', array( $this, 'zone_fields' ) );
 		add_action( 'zoninator_pre_zone_readonly', array( $this, 'zone_readonly' ) );
 		add_action( 'edited_term', array( $this, 'save_zone_fields'), 15, 3 );
 		add_action( 'created_term', array( $this, 'save_zone_fields'), 15, 3 );
@@ -168,147 +168,187 @@ class Zoninator_Plus {
 		}
 	}
 
+
 	/**
-	 * Adds additional fields to the zone management interface for users with access to edit zones
+	 * Adds additional fields to the zone management interface for users with
+	 * access to edit zones.
 	 *
-	 * @return void
+	 * @param  WP_Term $zone Zoninator zone, as a WP_Term object.
 	 */
 	public function zone_fields( $zone ) {
+		$this->zone_field_visible( $zone );
+		$this->zone_field_max_posts( $zone );
+		$this->zone_field_backfill( $zone );
+		$this->zone_field_content_types( $zone );
+		$this->zone_field_content_terms( $zone );
+
+		//TODO: ADD PREVIEW HERE
+	}
+
+
+	/**
+	 * Output field for "Visible" setting.
+	 *
+	 * @param  WP_Term $zone Zoninator zone, as a WP_Term object.
+	 */
+	public function zone_field_visible( $zone ) {
+		$visible = isset( $zone->term_id ) ? fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->visible_meta_key, true ) : false;
 		?>
 		<div class="form-field zone-field">
-			<label for="zone-visible"><?php _e( 'Visible?', 'zoninator-plus' ); ?></label>
-			<?php
-			$visible = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->visible_meta_key, true );
-			echo sprintf(
-				'<input type="checkbox" id="zone-visible" name="%s" value="1" %s/>',
-				$this->visible_meta_key,
-				( $visible == 1 ) ? "checked" : ""
-			);
-			?>
-			<br><i><?php _e( 'Whether or not to display the zone on the site', 'zoninator-plus' ); ?></i>
-		</div>
-		<div class="form-field zone-field">
-			<label for="zone-max-posts"><?php _e( 'Maximum Pieces of Content', 'zoninator-plus' ); ?></label>
-			<input type="text" id="zone-max-posts" name="<?php echo $this->max_posts_meta_key ?>" value="<?php echo esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->max_posts_meta_key, true ) ); ?>" />
-			<br><i><?php _e( 'Maximum number of content items for this zone. Leave blank for unlimited.', 'zoninator-plus' ); ?></i>
-		</div>
-		<div class="form-field zone-field">
-			<label for="zone-backfill"><?php _e( 'Automatically Backfill Using', 'zoninator-plus' ); ?></label>
-			<select id="zone-backfill" name="<?php echo $this->backfill_meta_key ?>">
-			<?php
-			// Get the current value
-			$backfill = esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->backfill_meta_key, true ) );
+			<label for="zone-visible">
+				<input type="checkbox" id="zone-visible" name="<?php echo esc_attr( $this->visible_meta_key ); ?>" value="1" <?php checked( $visible ) ?> />
+				<?php esc_html_e( 'Visible?', 'zoninator-plus' ); ?>
+			</label>
 
-			// Iterate through the options
-			foreach( $this->backfill_options as $option ) {
-				echo sprintf(
-					'<option value="%s" %s>%s</option>',
-					$option['value'],
-					( $option['value'] == $backfill ) ? "selected" : "",
-					$option['label']
-				);
-			}
-			?>
-			</select>
-			<br><i><?php _e( 'Choose what method to use to backfill content, if any.', 'zoninator-plus' ); ?></i>
-		</div>
-		<div class="form-field zone-field">
-			<label for="zone-allowed-content-types"><?php _e( 'Allowed Content Types (for Automatic Backfill)', 'zoninator-plus' ); ?></label>
-			<select class="chzn-select" id="zone-allowed-content-types-display" name="<?php echo $this->post_types_meta_key ?>_display[]" multiple="multiple" data-placeholder="Select Post Types">
-			<?php
-			// Get currently selected post types
-			$selected_post_types = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->post_types_meta_key, true );
-			$selected_post_types_data = json_decode( $selected_post_types );
-			$selected_post_types_names = array();
-			if( is_array( $selected_post_types_data ) )
-				foreach( $selected_post_types_data as $selected_post_type )
-					$selected_post_types_names[] = $selected_post_type->name;
-
-			$post_types = $this->get_zoninator_post_types();
-
-			// Order by name
-			uasort( $post_types, function( $a, $b ) {
-				 return ( $a->label < $b->label ) ? -1 : 1;
-			} );
-
-			// Display as option elements
-			foreach( $post_types as $post_type ) {
-				echo sprintf(
-					'<option value="%s" %s>%s</option>',
-					$post_type->name,
-					( is_array( $selected_post_types_names ) && in_array( $post_type->name, $selected_post_types_names ) ) ? "selected" : "",
-					$post_type->label
-				);
-			}
-
-			// Initialize chosen.js for this field
-			add_action( 'admin_footer',  function() {
-				echo '<script type="text/javascript"> $("#zone-allowed-content-types-display").chosen()</script>';
-			} );
-			?>
-			</select>
-			<input type="hidden" id="zone-allowed-content-types" name="<?php echo $this->post_types_meta_key ?>" value="<?php echo esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->post_types_meta_key, true ) ); ?>" />
-			<br><i><?php _e( 'Choose which post types to use for backfill. Leave blank to use all.', 'zoninator-plus' ); ?></i>
-		</div>
-		<div class="form-field zone-field">
-			<label for="zone-content-terms"><?php _e( 'Terms (for Automatic Backfill)', 'zoninator-plus' ); ?></label>
-			<select class="chzn-select" id="zone-content-terms-display" name="<?php echo $this->terms_meta_key ?>_display[]" multiple="multiple" data-placeholder="Select Terms">
-			<?php
-			// Get currently selected post types
-			$selected_terms = fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->terms_meta_key, true );
-			$selected_terms_data = json_decode( $selected_terms );
-			$selected_terms_ids = array();
-			if( is_array( $selected_terms_data ) )
-				foreach( $selected_terms_data as $selected_term )
-					$selected_terms_ids[] = $selected_term->id;
-
-			$taxonomies = $this->get_zoninator_taxonomies();
-
-			// Display as option elements
-			foreach( $taxonomies as $taxonomy ) {
-				// Start the optgroup for this taxonomy
-				echo sprintf(
-					'<optgroup label="%s" data-taxonomy="%s">',
-					$taxonomy->label,
-					$taxonomy->name
-				);
-
-				// Add the terms
-				$terms = get_terms(
-					$taxonomy->name,
-					array(
-						'orderby' => 'name',
-						'hide_empty' => 0
-					)
-				);
-
-				// Output the terms
-				foreach( $terms as $term ) {
-					echo sprintf(
-						'<option value="%s" %s />%s</option>',
-						$term->term_id,
-						( is_array( $selected_terms_ids ) && in_array( $term->term_id, $selected_terms_ids ) ) ? "selected" : "",
-						$term->name
-					);
-				}
-
-				// Close the optgroup
-				echo '</optgroup>';
-			}
-
-			// Initialize chosen.js for this field
-			add_action( 'admin_footer',  function() {
-				echo '<script type="text/javascript"> $("#zone-content-terms-display").chosen()</script>';
-			} );
-			?>
-			</select>
-			<input type="hidden" id="zone-content-terms" name="<?php echo $this->terms_meta_key ?>" value="<?php echo esc_attr( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->terms_meta_key, true ) ); ?>" />
-			<br><i><?php _e( 'Choose which terms to use for backfill. Leave blank to use all.', 'zoninator-plus' ); ?></i>
+			<br><i><?php esc_html_e( 'Whether or not to display the zone on the site', 'zoninator-plus' ); ?></i>
 		</div>
 		<?php
-			//TODO: ADD PREVIEW HERE
-			?>
-			<?php
+	}
+
+
+	/**
+	 * Output field for "Max Posts" setting.
+	 *
+	 * @param  WP_Term $zone Zoninator zone, as a WP_Term object.
+	 */
+	public function zone_field_max_posts( $zone ) {
+		$max_posts = isset( $zone->term_id ) ? fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->max_posts_meta_key, true ) : false;
+		?>
+		<div class="form-field zone-field">
+			<label for="zone-max-posts"><?php esc_html_e( 'Maximum Pieces of Content', 'zoninator-plus' ); ?></label>
+			<input type="text" id="zone-max-posts" name="<?php echo esc_attr( $this->max_posts_meta_key ) ?>" value="<?php echo esc_attr( $max_posts ); ?>" />
+			<br><i><?php esc_html_e( 'Maximum number of content items for this zone. Leave blank for unlimited.', 'zoninator-plus' ); ?></i>
+		</div>
+		<?php
+	}
+
+
+	/**
+	 * Output field for "Backfill" setting.
+	 *
+	 * @param  WP_Term $zone Zoninator zone, as a WP_Term object.
+	 */
+	public function zone_field_backfill( $zone ) {
+		$backfill = isset( $zone->term_id ) ? fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->backfill_meta_key, true ) : false;
+		?>
+		<div class="form-field zone-field">
+			<label for="zone-backfill"><?php esc_html_e( 'Automatically Backfill Using', 'zoninator-plus' ); ?></label>
+			<select id="zone-backfill" name="<?php echo esc_attr( $this->backfill_meta_key ) ?>">
+				<?php foreach( $this->backfill_options as $option ) : ?>
+					<option value="<?php echo esc_attr( $option['value'] ) ?>" <?php selected( $option['value'], $backfill ) ?>><?php echo esc_html( $option['label'] ); ?></option>
+				<?php endforeach; ?>
+			</select>
+			<br><i><?php esc_html_e( 'Choose what method to use to backfill content, if any.', 'zoninator-plus' ); ?></i>
+		</div>
+		<?php
+	}
+
+
+	/**
+	 * Output field for "Content Types" setting.
+	 *
+	 * @param  WP_Term $zone Zoninator zone, as a WP_Term object.
+	 */
+	public function zone_field_content_types( $zone ) {
+		$selected_post_types = isset( $zone->term_id ) ? fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->post_types_meta_key, true ) : '[]';
+		?>
+		<div class="form-field zone-field">
+			<label for="zone-allowed-content-types"><?php _e( 'Allowed Content Types (for Automatic Backfill)', 'zoninator-plus' ); ?></label>
+			<select class="chzn-select" id="zone-allowed-content-types-display" name="<?php echo esc_attr( $this->post_types_meta_key ) ?>_display[]" multiple="multiple" data-placeholder="Select Post Types">
+				<?php
+				// Get currently selected post types
+				$selected_post_types_data = json_decode( $selected_post_types );
+				$selected_post_types_names = array();
+				if ( is_array( $selected_post_types_data ) ) {
+					foreach( $selected_post_types_data as $selected_post_type ) {
+						$selected_post_types_names[] = $selected_post_type->name;
+					}
+				}
+
+				$post_types = $this->get_zoninator_post_types();
+
+				// Order by name
+				uasort( $post_types, function( $a, $b ) {
+					 return ( $a->label < $b->label ) ? -1 : 1;
+				} );
+
+				// Display as option elements
+				foreach( $post_types as $post_type ) : ?>
+					<option value="<?php echo esc_attr( $post_type->name ) ?>" <?php selected( in_array( $post_type->name, $selected_post_types_names ) ); ?>><?php echo esc_html( $post_type->label ); ?></option>
+				<?php endforeach; ?>
+			</select>
+			<input type="hidden" id="zone-allowed-content-types" name="<?php echo esc_attr( $this->post_types_meta_key ) ?>" value="<?php echo esc_attr( $selected_post_types ); ?>" />
+			<br><i><?php esc_html_e( 'Choose which post types to use for backfill. Leave blank to use all.', 'zoninator-plus' ); ?></i>
+			<script type="text/javascript">
+				jQuery( function( $ ) {
+					$( '#zone-allowed-content-types-display' ).chosen();
+				} );
+			</script>
+		</div>
+		<?php
+	}
+
+
+	/**
+	 * Output field for "Content Terms" setting.
+	 *
+	 * @param  WP_Term $zone Zoninator zone, as a WP_Term object.
+	 */
+	public function zone_field_content_terms( $zone ) {
+		$selected_terms = isset( $zone->term_id ) ? fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->terms_meta_key, true ) : '[]';
+		?>
+		<div class="form-field zone-field">
+			<label for="zone-content-terms"><?php esc_html_e( 'Terms (for Automatic Backfill)', 'zoninator-plus' ); ?></label>
+			<select class="chzn-select" id="zone-content-terms-display" name="<?php echo $this->terms_meta_key ?>_display[]" multiple="multiple" data-placeholder="<?php esc_html_e( 'Select Terms', 'zoninator-plus' ); ?>">
+
+				<?php
+				// Get currently selected post types
+				$selected_terms_data = json_decode( $selected_terms );
+				$selected_terms_ids = array();
+				if ( is_array( $selected_terms_data ) ) {
+					foreach( $selected_terms_data as $selected_term ) {
+						$selected_terms_ids[] = $selected_term->id;
+					}
+				}
+
+				$taxonomies = $this->get_zoninator_taxonomies();
+
+				// Display as option elements
+				foreach ( $taxonomies as $taxonomy ) : ?>
+
+					<optgroup label="<?php echo esc_attr( $taxonomy->label ); ?>" data-taxonomy="<?php echo esc_attr( $taxonomy->name ); ?>">
+
+						<?php
+						// Add the terms
+						$terms = get_terms(
+							$taxonomy->name,
+							array(
+								'orderby' => 'name',
+								'hide_empty' => 0,
+							)
+						);
+
+						// Output the terms
+						foreach ( $terms as $term ) : ?>
+
+							<option value="<?php echo intval( $term->term_id ); ?>" <?php selected( in_array( $term->term_id, $selected_terms_ids ) ) ?> /><?php echo esc_html( $term->name ); ?></option>
+
+						<?php endforeach ?>
+
+					</optgroup>
+
+				<?php endforeach ?>
+
+			</select>
+			<input type="hidden" id="zone-content-terms" name="<?php echo esc_attr( $this->terms_meta_key ) ?>" value="<?php echo esc_attr( $selected_terms ); ?>" />
+			<br><i><?php esc_html_e( 'Choose which terms to use for backfill. Leave blank to use all.', 'zoninator-plus' ); ?></i>
+			<script type="text/javascript">
+				jQuery( function( $ ) {
+					$( '#zone-content-terms-display' ).chosen();
+				} );
+			</script>
+		</div>
+		<?php
 	}
 
 	/**

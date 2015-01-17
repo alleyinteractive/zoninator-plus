@@ -555,42 +555,29 @@ class Zoninator_Plus_Groups {
 	 * @return void
 	 */
 	public function zone_fields( $zone ) {
+		// Get currently selected group
+		$selected_zone_group = isset( $zone->term_id ) ? intval( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->zone_group_meta_key, true ) ) : 0;
+
+		// Get the zone groups
+		$zone_groups = $this->get_zone_groups();
+
+		$zone_group_selected = get_transient( $this->zone_group_selected_transient_key );
 		?>
 		<div class="form-field zone-field">
-			<label for="zone-group"><?php _e( 'Group', 'zoninator-plus' ); ?></label>
-			<select class="chzn-select" id="zone-group" name="<?php echo $this->zone_group_meta_key ?>" data-placeholder="None">
-			<option></option>
-			<?php
-			// Get currently selected group
-			$selected_zone_group = intval( fm_get_term_meta( $zone->term_id, z_get_zoninator()->zone_taxonomy, $this->zone_group_meta_key, true ) );
-
-			// Get the zone groups
-			$zone_groups = $this->get_zone_groups();
-
-			// Display as option elements
-			foreach( $zone_groups as $zone_group ) {
-				echo sprintf(
-					'<option value="%s" %s>%s</option>',
-					$zone_group->term_id,
-					( $zone_group->term_id == $selected_zone_group ) ? "selected" : "",
-					$zone_group->name
-				);
-			}
-
-			// Initialize chosen.js for this field
-			add_action( 'admin_footer',  function() {
-				echo '<script type="text/javascript"> $("#zone-group").chosen({allow_single_deselect:true})</script>';
-			} );
-			?>
+			<label for="zone-group"><?php esc_html_e( 'Group', 'zoninator-plus' ); ?></label>
+			<select class="chzn-select" id="zone-group" name="<?php echo esc_attr( $this->zone_group_meta_key ) ?>" data-placeholder="<?php esc_attr_e( 'None', 'zoninator-plus' ); ?>">
+				<option></option>
+				<?php foreach ( $zone_groups as $zone_group ) : ?>
+					<option value="<?php echo esc_attr( $zone_group->term_id ); ?>" <?php selected( $zone_group->term_id, $selected_zone_group ); ?>><?php echo esc_html( $zone_group->name ); ?></option>
+				<?php endforeach ?>
 			</select>
-			<br><i><?php _e( 'Choose a content grouping for this zone.', 'zoninator-plus' ); ?></i>
-			<?php
-				$zone_group_selected = get_transient( $this->zone_group_selected_transient_key );
-				echo sprintf(
-					'<input type="hidden" name="zone_group_selected" id="zone-group-selected" value="%s" />',
-					( $zone_group_selected === false ) ? "" : $zone_group_selected
-				);
-			?>
+			<br><i><?php esc_html_e( 'Choose a content grouping for this zone.', 'zoninator-plus' ); ?></i>
+			<input type="hidden" name="zone_group_selected" id="zone-group-selected" value="<?php echo esc_attr( $zone_group_selected ); ?>" />
+			<script type="text/javascript">
+				jQuery( function( $ ) {
+					$( "#zone-group" ).chosen( { allow_single_deselect: true } );
+				} );
+			</script>
 		</div>
 		<?php
 	}
